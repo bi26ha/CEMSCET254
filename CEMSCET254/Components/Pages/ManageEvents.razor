@@ -1,0 +1,94 @@
+﻿@page "/manage-events"
+@using CEMSCET254.Services
+@using CEMSCET254.Data.Models
+@inject EventService EventService
+
+<h3>Manage Events</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ev in events)
+        {
+            <tr>
+                <td>@ev.Name</td>
+                <td>@ev.Date.ToShortDateString()</td>
+                <td>@ev.Time.ToString("HH:mm")</td> <!-- Updated to format TimeOnly -->
+                <td>@ev.Description</td>
+                <td>
+                    <button class="btn btn-warning" @onclick="() => EditEvent(ev.Id)">Edit</button>
+                    <button class="btn btn-danger" @onclick="() => DeleteEvent(ev.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Add/Edit Event</h4>
+<form>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" id="name" @bind="currentEvent.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" id="date" @bind="currentEvent.Date"
+               class="form-control"
+               min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="mb-3">
+        <label for="time" class="form-label">Time</label>
+        <input type="time" id="time" @bind="currentEvent.Time"
+               class="form-control"
+               min="00:00"
+               max="23:59" />
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" @bind="currentEvent.Description" class="form-control"></textarea>
+    </div>
+    <button class="btn btn-primary" @onclick="SaveEvent">Save</button>
+</form>
+
+@code {
+    private List<Event> events = new List<Event>();
+    private Event currentEvent = new Event();
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetAllEventsAsync();
+    }
+
+    private async Task SaveEvent()
+    {
+        if (currentEvent.Id == 0)
+        {
+            await EventService.AddEventAsync(currentEvent);
+        }
+        else
+        {
+            await EventService.UpdateEventAsync(currentEvent);
+        }
+        currentEvent = new Event();
+        events = await EventService.GetAllEventsAsync();
+    }
+
+    private async Task EditEvent(int id)
+    {
+        currentEvent = await EventService.GetEventByIdAsync(id);
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await EventService.DeleteEventAsync(id);
+        events = await EventService.GetAllEventsAsync();
+    }
+}

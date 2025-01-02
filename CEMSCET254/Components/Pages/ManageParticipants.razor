@@ -1,0 +1,59 @@
+﻿@page "/manage-participants"
+@using CEMSCET254.Services
+@using CEMSCET254.Data.Models
+@inject ParticipantService ParticipantService
+
+<h3>Manage Participants</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var participant in participants)
+        {
+            <tr>
+                <td>@participant.Name</td>
+                <td>@participant.Email</td>
+                <td>@participant.PhoneNumber</td>
+                <td>
+                    <button class="btn btn-danger" @onclick="() => DeleteParticipant(participant.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Add New Participant</h4>
+<input type="text" @bind="newParticipant.Name" placeholder="Name" class="form-control mb-2" />
+<input type="email" @bind="newParticipant.Email" placeholder="Email" class="form-control mb-2" />
+<input type="text" @bind="newParticipant.PhoneNumber" placeholder="Phone Number" class="form-control mb-2" />
+<button class="btn btn-primary" @onclick="AddParticipant">Add Participant</button>
+
+@code {
+    private List<Participant> participants = new List<Participant>();
+    private Participant newParticipant = new Participant();
+
+    protected override async Task OnInitializedAsync()
+    {
+        participants = await ParticipantService.GetAllParticipantsAsync();
+    }
+
+    private async Task AddParticipant()
+    {
+        await ParticipantService.AddParticipantAsync(newParticipant);
+        participants = await ParticipantService.GetAllParticipantsAsync();
+        newParticipant = new Participant();
+    }
+
+    private async Task DeleteParticipant(int id)
+    {
+        await ParticipantService.DeleteParticipantAsync(id);
+        participants = await ParticipantService.GetAllParticipantsAsync();
+    }
+}

@@ -1,0 +1,80 @@
+﻿@page "/manage-activities"
+@using CEMSCET254.Services
+@using CEMSCET254.Data.Models
+@inject ActivityService ActivityService
+
+<h3>Manage Activities</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var activity in activities)
+        {
+            <tr>
+                <td>@activity.Name</td>
+                <td>@activity.Description</td>
+                <td>
+                    <button class="btn btn-warning" @onclick="() => EditActivity(activity.Id)">Edit</button>
+                    <button class="btn btn-danger" @onclick="() => DeleteActivity(activity.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Add/Edit Activity</h4>
+<form>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" id="name" @bind="currentActivity.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" @bind="currentActivity.Description" class="form-control"></textarea>
+    </div>
+    <button class="btn btn-primary" @onclick="SaveActivity">Save</button>
+</form>
+
+@code {
+    private List<Activity> activities = new List<Activity>();
+    private Activity currentActivity = new Activity();
+
+    protected override async Task OnInitializedAsync()
+    {
+        activities = await ActivityService.GetAllActivitiesAsync();
+    }
+
+    private async Task SaveActivity()
+    {
+        if (currentActivity.Id == 0)
+        {
+            await ActivityService.AddActivityAsync(currentActivity);
+        }
+        else
+        {
+            await ActivityService.UpdateActivityAsync(currentActivity);
+        }
+
+        currentActivity = new Activity();
+        activities = await ActivityService.GetAllActivitiesAsync();
+        StateHasChanged(); // 🟩 **Explicitly added StateHasChanged**
+    }
+
+    private async Task EditActivity(int id)
+    {
+        currentActivity = await ActivityService.GetActivityByIdAsync(id);
+    }
+
+    private async Task DeleteActivity(int id)
+    {
+        await ActivityService.DeleteActivityAsync(id);
+        activities = await ActivityService.GetAllActivitiesAsync();
+        StateHasChanged(); // 🟩 **Explicitly added StateHasChanged**
+    }
+}
